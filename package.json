@@ -1,23 +1,124 @@
 {
   "name": "librelinkup-vs-code-extension",
-  "displayName": "librelinkup-vs-code-extension",
-  "description": "Visual Studio Code extension retrieves the most recent blood glucose reading from your LibreLinkUp account and displays it in your Visual Studio Code status bar.",
+  "displayName": "LibreLinkUp Status Bar",
+  "description": "Visual Studio Code extension that retrieves the most recent blood glucose reading from your LibreLinkUp account and displays it in your Visual Studio Code status bar.",
+  "icon": "images/librelinkup-vs-code-logo.png",
   "version": "0.0.1",
+  "license": "MIT",
+  "repository": {
+		"type": "git",
+		"url": "https://github.com/borkod/librelinkup-vs-code-extension"
+	},
+  "homepage": "https://github.com/borkod/librelinkup-vs-code-extension",
+  "bugs": {
+    "url": "https://github.com/borkod/librelinkup-vs-code-extension/issues"
+  },
+  "galleryBanner": {
+    "color": "#000000",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.95.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "pricing": "Free",
+  "publisher": "borkod",
+  "keywords": [
+    "LibreLinkUp",
+    "Libre",
+    "FreeStyle",
+    "blood glucose",
+    "diabetes",
+    "status bar"
+  ],
+  "activationEvents": [
+		"onStartupFinished"
+	],
   "main": "./dist/extension.js",
+  "sponsor": {
+    "url": "https://github.com/sponsors/borkod"
+  },
   "contributes": {
     "commands": [
       {
-        "command": "librelinkup-vs-code-extension.helloWorld",
-        "title": "Hello World"
+        "command": "librelinkup-vs-code-extension.update-and-show-date",
+        "title": "LibreLinkUp: Update and Show Last Entry Date"
       }
-    ]
+    ],
+  "configuration": {
+      "title": "LibreLinkUp Status Bar",
+      "properties": {
+        "librelinkup-vs-code-extension.linkUpUsername": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "markdownDescription": "LibreLink Up Login Email (e.g. `mail@example.com`)"
+        },
+        "librelinkup-vs-code-extension.linkUpPassword": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "markdownDescription": "LibreLink Up Login Password"
+        },
+        "librelinkup-vs-code-extension.linkUpRegion": {
+          "type": "string",
+          "scope": "machine",
+          "enum": ["AE", "AP", "AU", "CA", "DE", "EU", "EU2", "FR", "JP", "US", "LA"],
+          "default": "US",
+          "markdownDescription": "Your region. Used to determine the correct LibreLinkUp service (Possible values: AE, AP, AU, CA, DE, EU2, EU2, FR, JP, US, LA)"
+        },
+        "librelinkup-vs-code-extension.linkUpConnection": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "markdownDescription": "LibreLink Up Patient-ID. Can be received from the console output if multiple connections are available (e.g. `123456abc-abcd-efgh-7891def`)"
+        },
+        "librelinkup-vs-code-extension.glucoseUnits": {
+          "type": "string",
+          "scope": "machine",
+          "enum": ["millimolar", "milligrams"],
+          "markdownEnumDescriptions": [
+            "mmol/L (Millimoles Per Litre)",
+            "mg/dL (Milligrams per 100 millilitres)"
+          ],
+          "enumItemLabels": ["mmol/L", "mg/dL"],
+          "default": "milligrams",
+          "description": "Blood glucose units"
+        },
+        "librelinkup-vs-code-extension.high-glucose-warning-message.enabled": {
+          "type": "boolean",
+          "scope": "machine",
+          "default": true,
+          "description": "Enable high glucose warning pop-up message"
+        },
+        "librelinkup-vs-code-extension.high-glucose-warning-background-color.enabled": {
+          "type": "boolean",
+          "scope": "machine",
+          "default": true,
+          "description": "Enable high glucose warning background color"
+        },
+        "librelinkup-vs-code-extension.low-glucose-warning-message.enabled": {
+          "type": "boolean",
+          "scope": "machine",
+          "default": true,
+          "description": "Enable low glucose warning pop-up message"
+        },
+        "librelinkup-vs-code-extension.low-glucose-warning-background-color.enabled": {
+          "type": "boolean",
+          "scope": "machine",
+          "default": true,
+          "description": "Enable low glucose warning background color"
+        },
+        "librelinkup-vs-code-extension.updateInterval": {
+          "type": "number",
+          "scope": "machine",
+          "default": 10,
+          "markdownDescription": "Time interval (in minutes) between queries for updated data"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

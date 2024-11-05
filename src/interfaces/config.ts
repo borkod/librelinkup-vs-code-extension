@@ -3,6 +3,11 @@ export interface linkUpConfig {
 	linkUpRegion: string;
 	linkUpUsername: string;
 	linkUpPassword: string;
-	linkUpTimeInterval: Number;
 	linkUpConnection: string;
+	glucoseUnits: string;
+	lowGlucoseWarningEnabled: boolean;
+	lowGlucoseWarningBackgroundEnabled: boolean;
+	highGlucoseWarningEnabled: boolean;
+	highGlucoseWarningBackgroundEnabled: boolean;
+	updateInterval: number;
 }
