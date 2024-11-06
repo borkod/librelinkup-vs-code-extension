@@ -7,7 +7,7 @@ import {linkUpConfig} from "./interfaces/config";
 import {LoginResponse} from "./interfaces/librelink/login-response";
 import {ConnectionsResponse} from "./interfaces/librelink/connections-response";
 import {GraphData, GraphResponse} from "./interfaces/librelink/graph-response";
-import {AuthTicket, Connection, GlucoseItem} from "./interfaces/librelink/common";
+import {AuthTicket, Connection, GlucoseItem, GlucoseMeasurement} from "./interfaces/librelink/common";
 import {LibreLinkUpHttpHeaders} from "./interfaces/http-headers";
 import {CookieJar} from "tough-cookie";
 import {HttpCookieAgent} from "http-cookie-agent/http";
@@ -32,6 +32,7 @@ const stealthHttpsAgent: HttpsAgent = new HttpsAgent({
 // last known authTicket
 let authTicket: AuthTicket = {duration: 0, expires: 0, token: ""};
 
+// Set User-Agent
 const USER_AGENT = "Mozilla/5.0 (iPhone; CPU OS 17_4.1 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/17.4.1 Mobile/10A5355d Safari/8536.25";
 
 // LibreLink Up API Settings (Don't change this unless you know what you are doing)
@@ -40,6 +41,7 @@ const LIBRE_LINK_UP_VERSION = "4.10.0";
 const LIBRE_LINK_UP_PRODUCT = "llu.ios";
 const LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS["CA"]; // TODO: Fix this to use the region from the config
 
+// Set the default LibreLink Up HTTP headers
 const libreLinkUpHttpHeaders: LibreLinkUpHttpHeaders = {
     "User-Agent": USER_AGENT,
     "Content-Type": "application/json;charset=UTF-8",
@@ -51,23 +53,72 @@ const libreLinkUpHttpHeaders: LibreLinkUpHttpHeaders = {
 const jar: CookieJar = new CookieJar();
 const cookieAgent: HttpAgent = new HttpCookieAgent({cookies: {jar}})
 
+let myStatusBarItem: vscode.StatusBarItem;
+
+// Variable to hold the timeout ID
+let updateTimeout: NodeJS.Timeout;
+
+// Output channel for logging
+let logOutputChannel : vscode.LogOutputChannel;
+
+let myConfig: linkUpConfig;
+
+let currentResult: GlucoseMeasurement = {
+    FactoryTimestamp: "",
+    Timestamp: "",
+    type: 1,
+    ValueInMgPerDl: 0,
+    TrendArrow: 0,
+    TrendMessage: "",
+    MeasurementColor: 0,
+    GlucoseUnits: 0,
+    Value: 0,
+    isHigh: false,
+    isLow: false,
+};
+
 // This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "librelinkup-vs-code-extension" is now active!');
+    // Create a new output channel for logging
+	logOutputChannel = vscode.window.createOutputChannel("LibreLinkUp CGM Output", {log: true});
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('librelinkup-vs-code-extension.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from librelinkup-vs-code-extension!');
-		testFunction();
+    logOutputChannel.info('Extension "librelinkup-vs-code-extension" is now active!');
+
+    // Set the configuration for the extension
+	myConfig = updateConfig();
+
+    // Listening to configuration changes
+	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+		if (e.affectsConfiguration('librelinkup-vs-code-extension')) {
+			myConfig = updateConfig();
+			updateStatusBarItem();
+		}
+	}));
+
+    // Register the command to show the date of the last entry
+	const myCommandId = 'librelinkup-vs-code-extension.update-and-show-date';
+	const disposable = vscode.commands.registerCommand(myCommandId, () => {
+		updateStatusBarItemAndShowDate();
 	});
+	
+    // create a new status bar item
+	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	myStatusBarItem.command = myCommandId;
+	context.subscriptions.push(myStatusBarItem);
+
+    // update status bar item once at start
+	myStatusBarItem.text = `---`;
+	myStatusBarItem.show();
+	updateStatusBarItem();
+	// Manage the timeout lifecycle
+    context.subscriptions.push({
+        dispose: () => {
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+            }
+        }
+    });
 
 	context.subscriptions.push(disposable);
 }
@@ -75,19 +126,124 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
-async function testFunction(): Promise<void> {
-	console.log("Hello from the test function");
+// Function to schedule the next update
+function scheduleUpdate() {
+	// Clear any existing timeout to prevent multiple timers
+	if (updateTimeout) {
+		clearTimeout(updateTimeout);
+	}
+    // Calculate the interval in milliseconds
+    const interval = myConfig.updateInterval * 60 * 1000;
+    // Schedule the next update
+    updateTimeout = setTimeout(() => {
+        updateStatusBarItem();
+    }, interval);
+}
+
+// Function to update the status bar item and show the date of the last entry
+function updateStatusBarItemAndShowDate(): void {
+	updateStatusBarItem().then(() => {
+		if (currentResult.Value > 0) {
+			vscode.window.showInformationMessage(`LibreLinkUp CGM last entry at: ${currentResult.Timestamp}`);
+		} else {
+			vscode.window.showInformationMessage(`No data available.`);
+		}
+	});
+}
+
+// Async function to get the latest data and update the status bar item
+async function updateStatusBarItem(): Promise<void> {
+	fetchData()
+		.then((newResult) => {
+			// Update the current result
+			currentResult = newResult;
+			// Update the status bar item
+			if (currentResult.Value > 0) {
+				let sgv = currentResult.ValueInMgPerDl;
+				let units = "mg/dL";
+				if (myConfig.glucoseUnits === 'millimolar') {
+					sgv = currentResult.ValueInMgPerDl / 18;
+					units = "mmol/L";
+				}
+				// Get the trend icon based on the direction
+				let icon = getTrendIcon(currentResult.TrendArrow);
+				myStatusBarItem.text = `${sgv.toFixed(1)} ${units} ${icon}`;
+				myStatusBarItem.show();
+				showWarning();
+			// If no data is available
+			} else {
+				myStatusBarItem.text = `---`;
+				myStatusBarItem.show();
+			}
+		})
+		// Catch any errors and log them
+		.catch((error) => {
+			logOutputChannel.error('Error fetching data:', error);
+			currentResult = {
+                FactoryTimestamp: "",
+                Timestamp: "",
+                type: 1,
+                ValueInMgPerDl: 0,
+                TrendArrow: 0,
+                TrendMessage: "",
+                MeasurementColor: 0,
+                GlucoseUnits: 0,
+                Value: 0,
+                isHigh: false,
+                isLow: false,
+            };
+			vscode.window.showErrorMessage(`Error fetching data: ${error.message || error}`);
+			myStatusBarItem.text = `---`;
+			myStatusBarItem.show();
+		})
+		.finally(() => {
+			// Schedule the next update after completing the current one
+			scheduleUpdate();
+		});
+}
+
+// Function to show a warning message if the glucose level is too low or too high
+function showWarning(): void {
+	if (currentResult.ValueInMgPerDl > 0 && currentResult.isLow && myConfig.lowGlucoseWarningEnabled) {
+		vscode.window.showWarningMessage(`Low blood glucose!`);
+	} else if (currentResult.ValueInMgPerDl > 0 && currentResult.isHigh && myConfig.highGlucoseWarningEnabled) {
+		vscode.window.showWarningMessage(`High blood glucose!`);
+	}
+
+	if (currentResult.ValueInMgPerDl > 0 && (currentResult.MeasurementColor === 2 || currentResult.MeasurementColor === 3) && myConfig.glucoseWarningBackgroundEnabled) {
+		myStatusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+	} else if (currentResult.ValueInMgPerDl > 0 && currentResult.MeasurementColor === 4 && myConfig.glucoseWarningBackgroundEnabled) {
+		myStatusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+	} else {
+		myStatusBarItem.backgroundColor = undefined;
+	}
+}
+
+async function fetchData(): Promise<GlucoseMeasurement> {
 
 	if (!hasValidAuthentication())
 	{
-		console.log("Renew token");
+		logOutputChannel.info("Renewing token");
 		deleteAuthTicket();
 		const authTicket: AuthTicket | null = await login();
 		if (!authTicket)
 		{
-			console.error("LibreLink Up - No AuthTicket received. Please check your credentials.");
+			logOutputChannel.error("Error: LibreLink Up - No AuthTicket received. Please check your credentials.");
 			deleteAuthTicket();
-			return;
+            let nullResult = {
+                FactoryTimestamp: "",
+                Timestamp: "",
+                type: 1,
+                ValueInMgPerDl: 0,
+                TrendArrow: 0,
+                TrendMessage: "",
+                MeasurementColor: 0,
+                GlucoseUnits: 0,
+                Value: 0,
+                isHigh: false,
+                isLow: false,
+            };
+			return nullResult;
 		}
 		updateAuthTicket(authTicket);
 	}
@@ -96,10 +252,24 @@ async function testFunction(): Promise<void> {
 
     if (!glucoseGraphData)
     {
-        return;
+        let nullResult = {
+            FactoryTimestamp: "",
+            Timestamp: "",
+            type: 1,
+            ValueInMgPerDl: 0,
+            TrendArrow: 0,
+            TrendMessage: "",
+            MeasurementColor: 0,
+            GlucoseUnits: 0,
+            Value: 0,
+            isHigh: false,
+            isLow: false,
+        };
+        return nullResult;
     }
 
-	console.log("glucoseGraphData: " + JSON.stringify(glucoseGraphData.connection.glucoseMeasurement));
+	logOutputChannel.info("Received glucose measurement: " + JSON.stringify(glucoseGraphData.connection.glucoseMeasurement));
+    return glucoseGraphData.connection.glucoseMeasurement;
 }
 
 function hasValidAuthentication(): boolean
@@ -110,7 +280,7 @@ function hasValidAuthentication(): boolean
         return currentDate < authTicket.expires;
     }
 
-	console.log("no authTicket.expires");
+	logOutputChannel.info("No authTicket.expires");
 
     return false;
 }
@@ -126,17 +296,16 @@ function updateAuthTicket(newAuthTicket: AuthTicket): void
 }
 
 export async function login(): Promise<AuthTicket | null>
-{
-    let config = readConfig()
-    
+{    
+    logOutputChannel.info("Logging in to LibreLink Up");
     try
     {
         const url = "https://" + LIBRE_LINK_UP_URL + "/llu/auth/login"
         const response: { data: LoginResponse } = await axios.post(
             url,
             {
-                email: config.linkUpUsername,
-                password: config.linkUpPassword,
+                email: myConfig.linkUpUsername,
+                password: myConfig.linkUpPassword,
             },
             {
                 headers: libreLinkUpHttpHeaders,
@@ -149,33 +318,32 @@ export async function login(): Promise<AuthTicket | null>
         {
             if (response.data.status !== 0)
             {
-				console.error(`LibreLink Up - Non-zero status code: ${JSON.stringify(response.data)}`)
+				logOutputChannel.error(`Error: LibreLink Up - Non-zero status code: ${JSON.stringify(response.data)}`)
                 return null;
             }
             if (response.data.data.redirect === true && response.data.data.region)
             {
                 const correctRegion = response.data.data.region.toUpperCase();
-				console.error(`LibreLink Up - Logged in to the wrong region. Switch to '${correctRegion}' region.`);
+				logOutputChannel.error(`Error: LibreLink Up - Logged in to the wrong region. Switch to '${correctRegion}' region.`);
                 return null;
             }
-			console.info("Logged in to LibreLink Up");
+			logOutputChannel.info("Logged in to LibreLink Up");
             return response.data.data.authTicket;
         } catch (err)
         {
-			console.error("Invalid authentication token. Please check your LibreLink Up credentials", err);
+			logOutputChannel.error("Error: LibreLink Up - Invalid authentication token. Please check your LibreLink Up credentials", err);
             return null;
         }
     } catch (error)
     {
-		console.error("Invalid credentials", error);
+		logOutputChannel.error("Error: LibreLink Up - Invalid credentials", error);
         return null;
     }
 }
 
 export async function getGlucoseMeasurements(): Promise<GraphData | null>
 {
-    let config = readConfig()
-
+    logOutputChannel.info("Getting glucose measurements");
     try
     {
         const connectionId = await getLibreLinkUpConnection();
@@ -197,7 +365,7 @@ export async function getGlucoseMeasurements(): Promise<GraphData | null>
         return response.data.data;
     } catch (error)
     {
-		console.error("Error getting glucose measurements", error);
+		logOutputChannel.error("Error getting glucose measurements", error);
         deleteAuthTicket();
         return null;
     }
@@ -205,8 +373,7 @@ export async function getGlucoseMeasurements(): Promise<GraphData | null>
 
 export async function getLibreLinkUpConnection(): Promise<string | null>
 {
-    let config = readConfig()
-
+    logOutputChannel.info("Getting LibreLink Up connection");
     try
     {
         const url = "https://" + LIBRE_LINK_UP_URL + "/llu/connections"
@@ -223,31 +390,31 @@ export async function getLibreLinkUpConnection(): Promise<string | null>
 
         if (connectionData.length === 0)
         {
-			console.error("No LibreLink Up connection found");
+			logOutputChannel.error("No LibreLink Up connection found");
             return null;
         }
 
         if (connectionData.length === 1)
         {
-			console.info("Found 1 LibreLink Up connection.");
+			logOutputChannel.info("Found 1 LibreLink Up connection.");
             logPickedUpConnection(connectionData[0]);
             return connectionData[0].patientId;
         }
 
         dumpConnectionData(connectionData);
 
-        if (!config.linkUpConnection)
+        if (!myConfig.linkUpConnection)
         {
-			console.warn("You did not specify a Patient-ID in the LINK_UP_CONNECTION environment variable.");
+			logOutputChannel.debug("No Patient-ID in the configuration specified.");
             logPickedUpConnection(connectionData[0]);
             return connectionData[0].patientId;
         }
 
-        const connection = connectionData.filter(connectionEntry => connectionEntry.patientId === config.linkUpConnection)[0];
+        const connection = connectionData.filter(connectionEntry => connectionEntry.patientId === myConfig.linkUpConnection)[0];
 
         if (!connection)
         {
-			console.error("The specified Patient-ID was not found.");
+			logOutputChannel.error("The specified Patient-ID was not found.");
             return null;
         }
 
@@ -255,7 +422,7 @@ export async function getLibreLinkUpConnection(): Promise<string | null>
         return connection.patientId;
     } catch (error)
     {
-		console.error("getting libreLinkUpConnection: ", error);
+		logOutputChannel.error("Error getting libreLinkUpConnection: ", error);
         deleteAuthTicket();
         return null;
     }
@@ -265,7 +432,7 @@ function getLluAuthHeaders(): LibreLinkUpHttpHeaders
 {
     const authenticatedHttpHeaders = libreLinkUpHttpHeaders;
     authenticatedHttpHeaders.Authorization = "Bearer " + getAuthenticationToken();
-	console.debug("authenticatedHttpHeaders: " + JSON.stringify(authenticatedHttpHeaders));;
+	logOutputChannel.debug("authenticatedHttpHeaders: " + JSON.stringify(authenticatedHttpHeaders));;
     return authenticatedHttpHeaders;
 }
 
@@ -276,35 +443,60 @@ function getAuthenticationToken(): string | null
         return authTicket.token;
     }
 
-	console.warn("no authTicket.token");
+	logOutputChannel.warn("no authTicket.token");
 
     return null;
 }
 
 function logPickedUpConnection(connection: Connection): void
 {
-    console.info(
+    logOutputChannel.info(
         "-> The following connection will be used: " + connection.firstName + " " + connection.lastName + " (Patient-ID: " +
         connection.patientId + ")");
 }
 
 function dumpConnectionData(connectionData: Connection[]): void
 {
-    console.debug("Found " + connectionData.length + " LibreLink Up connections:");
+    logOutputChannel.debug("Found " + connectionData.length + " LibreLink Up connections:");
     connectionData.map((connectionEntry: Connection, index: number) =>
     {
-        console.debug("[" + (index + 1) + "] " + connectionEntry.firstName + " " + connectionEntry.lastName + " (Patient-ID: " +
+        logOutputChannel.debug("[" + (index + 1) + "] " + connectionEntry.firstName + " " + connectionEntry.lastName + " (Patient-ID: " +
             connectionEntry.patientId + ")");
     });
 }
 
-function readConfig(): linkUpConfig
+function updateConfig(): linkUpConfig
 {
+    // Get the configuration object for the extension
+    const config = vscode.workspace.getConfiguration('librelinkup-vs-code-extension');
+    logOutputChannel.info('Updating configuration.');
 	return {
-		linkUpUsername: "",
-		linkUpPassword: "",
-		linkUpRegion: "CA",
-		linkUpTimeInterval: 5,
-		linkUpConnection: ""
+        glucoseUnits: config.get<string>('glucoseUnits', 'milligrams'),
+		linkUpUsername: config.get<string>('linkUpUsername', ''),
+		linkUpPassword: config.get<string>('linkUpPassword', ''),
+		linkUpRegion: config.get<string>('linkUpRegion', ''),
+		linkUpConnection: config.get<string>('linkUpConnection', ''),
+        lowGlucoseWarningEnabled: config.get<boolean>('low-glucose-warning-message.enabled', true),
+        glucoseWarningBackgroundEnabled: config.get<boolean>('low-glucose-warning-background-color.enabled', true),
+	    highGlucoseWarningEnabled: config.get<boolean>('high-glucose-warning-message.enabled', true),
+        updateInterval: config.get<number>('updateInterval', 10),
 	};
+}
+
+// Function to get the trend icon based on the direction
+function getTrendIcon(direction: number): string {
+	switch (direction) {
+		case 3:
+			return '→';
+		case 5:
+			return '↑';
+		case 1:
+			return '↓';
+		case 4:
+			return '↗';
+		case 2:
+			return '↘';
+		default:
+			return '??';
+	}
 }
