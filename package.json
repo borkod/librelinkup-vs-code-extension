@@ -67,7 +67,7 @@
           "scope": "machine",
           "enum": ["AE", "AP", "AU", "CA", "DE", "EU", "EU2", "FR", "JP", "US", "LA"],
           "default": "US",
-          "markdownDescription": "Your region. Used to determine the correct LibreLinkUp service (Possible values: AE, AP, AU, CA, DE, EU2, EU2, FR, JP, US, LA)"
+          "markdownDescription": "Your region. Used to determine the correct LibreLinkUp service (Possible values: AE, AP, AU, CA, DE, EU, EU2, FR, JP, US, LA)"
         },
         "librelinkup-vs-code-extension.linkUpConnection": {
           "type": "string",
@@ -93,23 +93,17 @@
           "default": true,
           "description": "Enable high glucose warning pop-up message"
         },
-        "librelinkup-vs-code-extension.high-glucose-warning-background-color.enabled": {
-          "type": "boolean",
-          "scope": "machine",
-          "default": true,
-          "description": "Enable high glucose warning background color"
-        },
         "librelinkup-vs-code-extension.low-glucose-warning-message.enabled": {
           "type": "boolean",
           "scope": "machine",
           "default": true,
           "description": "Enable low glucose warning pop-up message"
         },
-        "librelinkup-vs-code-extension.low-glucose-warning-background-color.enabled": {
+        "librelinkup-vs-code-extension.glucose-warning-background-color.enabled": {
           "type": "boolean",
           "scope": "machine",
           "default": true,
-          "description": "Enable low glucose warning background color"
+          "description": "Enable high or low glucose warning background color"
         },
         "librelinkup-vs-code-extension.updateInterval": {
           "type": "number",

@@ -6,8 +6,7 @@ export interface linkUpConfig {
 	linkUpConnection: string;
 	glucoseUnits: string;
 	lowGlucoseWarningEnabled: boolean;
-	lowGlucoseWarningBackgroundEnabled: boolean;
+	glucoseWarningBackgroundEnabled: boolean;
 	highGlucoseWarningEnabled: boolean;
-	highGlucoseWarningBackgroundEnabled: boolean;
 	updateInterval: number;
 }
