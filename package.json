@@ -2,7 +2,7 @@
   "name": "librelinkup-vs-code-extension",
   "displayName": "LibreLinkUp Status Bar",
   "description": "Visual Studio Code extension that retrieves the most recent blood glucose reading from your LibreLinkUp account and displays it in your Visual Studio Code status bar.",
-  "icon": "images/librelinkup-vs-code-logo.jpeg",
+  "icon": "images/librelinkup-vs-code-logo.png",
   "version": "0.0.1",
   "license": "MIT",
   "repository": {
