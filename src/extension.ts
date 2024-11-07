@@ -477,7 +477,7 @@ function updateConfig(): linkUpConfig
 		linkUpRegion: config.get<string>('linkUpRegion', ''),
 		linkUpConnection: config.get<string>('linkUpConnection', ''),
         lowGlucoseWarningEnabled: config.get<boolean>('low-glucose-warning-message.enabled', true),
-        glucoseWarningBackgroundEnabled: config.get<boolean>('low-glucose-warning-background-color.enabled', true),
+        glucoseWarningBackgroundEnabled: config.get<boolean>('glucose-warning-background-color.enabled', true),
 	    highGlucoseWarningEnabled: config.get<boolean>('high-glucose-warning-message.enabled', true),
         updateInterval: config.get<number>('updateInterval', 10),
 	};
