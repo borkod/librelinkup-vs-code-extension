@@ -4,7 +4,7 @@
 
 This Visual Studio Code extension retrieves the most recent blood glucose reading from your LibreLinkUp and displays it in your Visual Studio Code status bar. It can be used to monitor glucose levels of a friend or family member. Alternatively, it can be used to display your own glucose measurements.
 
-If you are not a FreeStyle Libre user and use a different CGM, you may be interested in [Nightscout Extension for Visual Studio Code](https://github.com/borkod/vs-code-nightscout-status-bar/tree/main).
+If you are not a FreeStyle Libre user and use a different CGM, you may be interested in [Nightscout Extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=borkod.nightscout-status-bar).
 
 ![LibreLinkUp Extension for Visual Studio Code](https://raw.githubusercontent.com/borkod/librelinkup-vs-code-extension/refs/heads/main/images/librelinkup-vs-code.gif)
 
@@ -59,7 +59,7 @@ If you encounter any problems, open a GitHub [issue](https://github.com/borkod/l
 
 ## Acknowledgments
 
-Code in the [Nightscout LibreLink Up Uploader/Sidecar](librelinkup-vs-code) was very useful as a reference when creating this extension.
+Code in the [Nightscout LibreLink Up Uploader/Sidecar](https://github.com/timoschlueter/nightscout-librelink-up/tree/main) was very useful as a reference when creating this extension.
 
 ## About
 
