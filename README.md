@@ -13,9 +13,6 @@ This Visual Studio Code extension retrieves the most recent blood glucose readin
 - Provides `LibreLinkUp: Update and Show Last Entry Date` command to manually trigger an update and display the date and time of the latest reading in your LibreLinkUp
   - Command can be triggered by clicking on your blood glucose reading in the status bar or via VS Code Command Palette
 - Low and high blood glucose level warnings
-
-![LibreLinkUp Extension Warning](https://raw.githubusercontent.com/borkod/librelinkup-vs-code-extension/main/images/librelinkup-warning.gif)
-
 - Status bar background color change on low or high blood glucose level warnings
 - Fully configurable settings
 
@@ -57,6 +54,10 @@ This extension contributes the following settings:
 This extension creates `LibreLinkUp CGM Output` output channel. Several info, warning, and error log messages are written to this channel. You can view this channel to inspect actions the extension is performing.
 
 If you encounter any problems, open a GitHub [issue](https://github.com/borkod/librelinkup-vs-code-extension/issues).
+
+## Acknowledgments
+
+Code in the [Nightscout LibreLink Up Uploader/Sidecar](librelinkup-vs-code) was very useful as a reference when creating this extension.
 
 ## About
 
