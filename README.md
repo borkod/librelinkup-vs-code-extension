@@ -6,7 +6,7 @@ This Visual Studio Code extension retrieves the most recent blood glucose readin
 
 If you are not a FreeStyle Libre user and use a different CGM, you may be interested in [Nightscout Extension for Visual Studio Code](https://github.com/borkod/vs-code-nightscout-status-bar/tree/main).
 
-![LibreLinkUp Extension for Visual Studio Code](https://github.com/borkod/librelinkup-vs-code-extension/blob/main/images/librelinkup-vs-code.gif)
+![LibreLinkUp Extension for Visual Studio Code](https://raw.githubusercontent.com/borkod/librelinkup-vs-code-extension/refs/heads/main/images/librelinkup-vs-code.gif)
 
 ## Features
 
