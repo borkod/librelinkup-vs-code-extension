@@ -39,7 +39,6 @@ const USER_AGENT = "Mozilla/5.0 (iPhone; CPU OS 17_4.1 like Mac OS X) AppleWebKi
 
 const LIBRE_LINK_UP_VERSION = "4.10.0";
 const LIBRE_LINK_UP_PRODUCT = "llu.ios";
-const LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS["CA"]; // TODO: Fix this to use the region from the config
 
 // Set the default LibreLink Up HTTP headers
 const libreLinkUpHttpHeaders: LibreLinkUpHttpHeaders = {
@@ -300,6 +299,7 @@ export async function login(): Promise<AuthTicket | null>
     logOutputChannel.info("Logging in to LibreLink Up");
     try
     {
+        let LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS[myConfig.linkUpRegion];
         const url = "https://" + LIBRE_LINK_UP_URL + "/llu/auth/login"
         const response: { data: LoginResponse } = await axios.post(
             url,
@@ -352,6 +352,7 @@ export async function getGlucoseMeasurements(): Promise<GraphData | null>
             return null;
         }
 
+        let LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS[myConfig.linkUpRegion];
         const url = "https://" + LIBRE_LINK_UP_URL + "/llu/connections/" + connectionId + "/graph"
         const response: { data: GraphResponse } = await axios.get(
             url,
@@ -376,6 +377,7 @@ export async function getLibreLinkUpConnection(): Promise<string | null>
     logOutputChannel.info("Getting LibreLink Up connection");
     try
     {
+        let LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS[myConfig.linkUpRegion];
         const url = "https://" + LIBRE_LINK_UP_URL + "/llu/connections"
         const response: { data: ConnectionsResponse } = await axios.get(
             url,
