@@ -27,7 +27,8 @@
 				"streetsidesoftware.code-spell-checker",
 				"ms-vscode.extension-test-runner",
 				"dbaeumer.vscode-eslint",
-				"connor4312.esbuild-problem-matchers"
+				"connor4312.esbuild-problem-matchers",
+				"borkod.librelinkup-vs-code-extension"
 			]
 		}
 	}
