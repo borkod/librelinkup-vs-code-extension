@@ -3,12 +3,12 @@
   "displayName": "LibreLinkUp Status Bar",
   "description": "Visual Studio Code extension that retrieves the most recent blood glucose reading from your LibreLinkUp account and displays it in your Visual Studio Code status bar.",
   "icon": "images/librelinkup-vs-code-logo.png",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "license": "MIT",
   "repository": {
-		"type": "git",
-		"url": "https://github.com/borkod/librelinkup-vs-code-extension"
-	},
+    "type": "git",
+    "url": "https://github.com/borkod/librelinkup-vs-code-extension"
+  },
   "homepage": "https://github.com/borkod/librelinkup-vs-code-extension",
   "bugs": {
     "url": "https://github.com/borkod/librelinkup-vs-code-extension/issues"
@@ -34,8 +34,8 @@
     "status bar"
   ],
   "activationEvents": [
-		"onStartupFinished"
-	],
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "sponsor": {
     "url": "https://github.com/sponsors/borkod"
@@ -47,7 +47,7 @@
         "title": "LibreLinkUp: Update and Show Last Entry Date"
       }
     ],
-  "configuration": {
+    "configuration": {
       "title": "LibreLinkUp Status Bar",
       "properties": {
         "librelinkup-vs-code-extension.linkUpUsername": {
@@ -65,7 +65,19 @@
         "librelinkup-vs-code-extension.linkUpRegion": {
           "type": "string",
           "scope": "machine",
-          "enum": ["AE", "AP", "AU", "CA", "DE", "EU", "EU2", "FR", "JP", "US", "LA"],
+          "enum": [
+            "AE",
+            "AP",
+            "AU",
+            "CA",
+            "DE",
+            "EU",
+            "EU2",
+            "FR",
+            "JP",
+            "US",
+            "LA"
+          ],
           "default": "US",
           "markdownDescription": "Your region. Used to determine the correct LibreLinkUp service (Possible values: AE, AP, AU, CA, DE, EU, EU2, FR, JP, US, LA)"
         },
@@ -78,12 +90,18 @@
         "librelinkup-vs-code-extension.glucoseUnits": {
           "type": "string",
           "scope": "machine",
-          "enum": ["millimolar", "milligrams"],
+          "enum": [
+            "millimolar",
+            "milligrams"
+          ],
           "markdownEnumDescriptions": [
             "mmol/L (Millimoles Per Litre)",
             "mg/dL (Milligrams per 100 millilitres)"
           ],
-          "enumItemLabels": ["mmol/L", "mg/dL"],
+          "enumItemLabels": [
+            "mmol/L",
+            "mg/dL"
+          ],
           "default": "milligrams",
           "description": "Blood glucose units"
         },
@@ -130,7 +148,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.9",
-    "@types/node": "20.x",
+    "@types/node": "^20.17.16",
     "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.7.0",

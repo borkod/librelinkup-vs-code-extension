@@ -46,11 +46,11 @@ const libreLinkUpHttpHeaders: LibreLinkUpHttpHeaders = {
     "Content-Type": "application/json;charset=UTF-8",
     "version": LIBRE_LINK_UP_VERSION,
     "product": LIBRE_LINK_UP_PRODUCT
-}
+};
 
 // Create a new CookieJar and HttpCookieAgent for Axios to handle cookies.
 const jar: CookieJar = new CookieJar();
-const cookieAgent: HttpAgent = new HttpCookieAgent({cookies: {jar}})
+const cookieAgent: HttpAgent = new HttpCookieAgent({cookies: {jar}});
 
 let myStatusBarItem: vscode.StatusBarItem;
 
@@ -300,7 +300,7 @@ export async function login(): Promise<AuthTicket | null>
     try
     {
         let LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS[myConfig.linkUpRegion];
-        const url = "https://" + LIBRE_LINK_UP_URL + "/llu/auth/login"
+        const url = "https://" + LIBRE_LINK_UP_URL + "/llu/auth/login";
         const response: { data: LoginResponse } = await axios.post(
             url,
             {
@@ -318,7 +318,7 @@ export async function login(): Promise<AuthTicket | null>
         {
             if (response.data.status !== 0)
             {
-				logOutputChannel.error(`Error: LibreLink Up - Non-zero status code: ${JSON.stringify(response.data)}`)
+				logOutputChannel.error(`Error: LibreLink Up - Non-zero status code: ${JSON.stringify(response.data)}`);
                 return null;
             }
             if (response.data.data.redirect === true && response.data.data.region)
@@ -353,7 +353,7 @@ export async function getGlucoseMeasurements(): Promise<GraphData | null>
         }
 
         let LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS[myConfig.linkUpRegion];
-        const url = "https://" + LIBRE_LINK_UP_URL + "/llu/connections/" + connectionId + "/graph"
+        const url = "https://" + LIBRE_LINK_UP_URL + "/llu/connections/" + connectionId + "/graph";
         const response: { data: GraphResponse } = await axios.get(
             url,
             {
@@ -378,7 +378,7 @@ export async function getLibreLinkUpConnection(): Promise<string | null>
     try
     {
         let LIBRE_LINK_UP_URL = LLU_API_ENDPOINTS[myConfig.linkUpRegion];
-        const url = "https://" + LIBRE_LINK_UP_URL + "/llu/connections"
+        const url = "https://" + LIBRE_LINK_UP_URL + "/llu/connections";
         const response: { data: ConnectionsResponse } = await axios.get(
             url,
             {
