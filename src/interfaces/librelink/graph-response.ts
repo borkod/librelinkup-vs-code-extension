@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-import {AuthTicket, Connection, GlucoseItem, GlucoseMeasurement, PatientDevice, Sensor} from "./common";
+import {AuthTicket, Connection, GlucoseItem, PatientDevice, Sensor} from "./common";
 
 interface ActiveSensor
 {
@@ -14,9 +14,8 @@ interface ActiveSensor
 export interface GraphData
 {
     connection: Connection;
-    glucoseMeasurement: GlucoseMeasurement;
-    //activeSensors: ActiveSensor[];
-    //graphData: GlucoseItem[];
+    activeSensors: ActiveSensor[];
+    graphData: GlucoseItem[];
 }
 
 export interface GraphResponse

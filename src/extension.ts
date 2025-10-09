@@ -31,13 +31,14 @@ const stealthHttpsAgent: HttpsAgent = new HttpsAgent({
 
 // last known authTicket
 let authTicket: AuthTicket = {duration: 0, expires: 0, token: ""};
+let userId: string = "";
 
 // Set User-Agent
 const USER_AGENT = "Mozilla/5.0 (iPhone; CPU OS 17_4.1 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/17.4.1 Mobile/10A5355d Safari/8536.25";
 
 // LibreLink Up API Settings (Don't change this unless you know what you are doing)
 
-const LIBRE_LINK_UP_VERSION = "4.10.0";
+const LIBRE_LINK_UP_VERSION = "4.16.0";
 const LIBRE_LINK_UP_PRODUCT = "llu.ios";
 
 // Set the default LibreLink Up HTTP headers
@@ -45,7 +46,8 @@ const libreLinkUpHttpHeaders: LibreLinkUpHttpHeaders = {
     "User-Agent": USER_AGENT,
     "Content-Type": "application/json;charset=UTF-8",
     "version": LIBRE_LINK_UP_VERSION,
-    "product": LIBRE_LINK_UP_PRODUCT
+    "product": LIBRE_LINK_UP_PRODUCT,
+    "account-id": "",
 };
 
 // Create a new CookieJar and HttpCookieAgent for Axios to handle cookies.
@@ -328,6 +330,7 @@ export async function login(): Promise<AuthTicket | null>
                 return null;
             }
 			logOutputChannel.info("Logged in to LibreLink Up");
+            updateAccountId(response.data.data.user.id);
             return response.data.data.authTicket;
         } catch (err)
         {
@@ -434,8 +437,30 @@ function getLluAuthHeaders(): LibreLinkUpHttpHeaders
 {
     const authenticatedHttpHeaders = libreLinkUpHttpHeaders;
     authenticatedHttpHeaders.Authorization = "Bearer " + getAuthenticationToken();
+
+    if (authTicket)
+    {
+        try
+        {
+            // Add SHA-256 hashed account-id to the headers
+            authenticatedHttpHeaders["account-id"] = crypto.createHash("sha256").update(getUserId()).digest("hex");
+        } catch (error)
+        {
+            logOutputChannel.error("Error getting accountId: ", error);
+        }
+    }
 	logOutputChannel.debug("authenticatedHttpHeaders: " + JSON.stringify(authenticatedHttpHeaders));;
     return authenticatedHttpHeaders;
+}
+
+function getUserId(): string
+{
+    return userId;
+}
+
+function updateAccountId(newUserId: string): void
+{
+    userId = newUserId;
 }
 
 function getAuthenticationToken(): string | null
