@@ -1,4 +1,5 @@
-interface LluApiEndpoints {
+interface LluApiEndpoints
+{
     [key: string]: string;
 }
 
@@ -14,4 +15,6 @@ export const LLU_API_ENDPOINTS: LluApiEndpoints = {
     JP: "api-jp.libreview.io",
     US: "api-us.libreview.io",
     LA: "api-la.libreview.io",
+    RU: "api.libreview.ru",
+    CN: "api-cn.myfreestyle.cn"
 } as const;

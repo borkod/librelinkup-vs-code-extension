@@ -66,3 +66,5 @@ Code in the [Nightscout LibreLink Up Uploader/Sidecar](https://github.com/timosc
 I was looking for a tool that would allow me to monitor my blood glucose levels without distractions. As a Visual Studio Code user, I believed that displaying the readings in the status bar would seamlessly integrate with my development environment.
 
 I hope others find this tool helpful too!
+
+If you would like to support this project, feel free to [buy me a coffee](https://buymeacoffee.com/borkod).
